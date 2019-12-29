@@ -1,5 +1,5 @@
-import "reflect-metadata";
-import {createConnection} from "typeorm";
+import 'reflect-metadata';
+import { createConnection } from 'typeorm';
 
 import { ApolloServer } from 'apollo-server-express';
 
@@ -10,28 +10,27 @@ import * as express from 'express';
 import * as session from 'express-session';
 
 const startServer = async () => {
+	const server = new ApolloServer({
+		typeDefs,
+		resolvers,
+		context: ({ req }: any) => ({ req })
+	});
 
-    const server = new ApolloServer({
-        typeDefs,
-        resolvers,
-        context: ({ req } : any) => ({ req })
-    });
+	await createConnection();
 
-    await createConnection();
+	const app = express();
 
-    const app = express();
+	app.use(
+		session({
+			secret: 'dev',
+			resave: false,
+			saveUninitialized: false
+		})
+	);
 
-    app.use(session({
-        secret: 'dev',
-        resave: false,
-        saveUninitialized: false
-    }));
+	server.applyMiddleware({ app });
 
-    server.applyMiddleware({ app });
-
-    app.listen({ port: 4000 }, () =>
-        console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
-    );
+	app.listen({ port: 4000 }, () => console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`));
 };
 
 startServer();
